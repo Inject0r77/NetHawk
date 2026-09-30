@@ -205,7 +205,7 @@ function Test-Url([string]$Url) {
 function Show-Header {
     Write-Host ""
     Write-Host "============================================================"
-    Write-Host "  NetHawk $Version"
+    Write-Host "  NetHawk $Version by inject0r77"
     Write-Host "  Основано на Flowseal/zapret-discord-youtube"
     Write-Host "  Движок: bol-van/zapret (winws) + WinDivert"
     Write-Host "============================================================"
