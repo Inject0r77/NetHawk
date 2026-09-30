@@ -411,6 +411,8 @@ NetHawk.bat / general*.bat / service.bat
 
 ## Авторы, upstream и лицензии
 
+**inject0r77** — разработчик NetHawk и его собственного слоя управления профилями, настройками и тестированием.
+
 NetHawk существует благодаря работе upstream-разработчиков.
 
 **bol-van** — автор и основной разработчик `zapret`, включая DPI-desync механики и `winws`, используемые NetHawk.
@@ -419,7 +421,15 @@ NetHawk существует благодаря работе upstream-разра
 
 **Basil00** — разработчик WinDivert, который используется Windows-runtime для перехвата сетевых пакетов.
 
-Собственный код NetHawk развивается как отдельный orchestration/configuration-слой поверх этих компонентов. Сторонние copyright notices и условия лицензий сохраняются в репозитории и релизах.
+Собственный код NetHawk распространяется под [MIT License](LICENSE).
+
+```text
+Copyright (c) 2026 inject0r77
+Copyright (c) 2016-2026 bol-van
+Copyright (c) 2024-2026 Flowseal
+```
+
+Строка inject0r77 относится к собственным дополнениям NetHawk. Сторонние компоненты сохраняют свои лицензии и уведомления об авторских правах: [THIRD_PARTY.md](THIRD_PARTY.md), [LICENSE-THIRD-PARTY.txt](LICENSE-THIRD-PARTY.txt).
 
 
 ---
