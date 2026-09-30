@@ -1,0 +1,79 @@
+name: Build NetHawk release ZIP
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  validate:
+    if: contains(github.event.head_commit.message, '[release]')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate PowerShell syntax
+        shell: powershell
+        run: |
+          $files = @(
+            ".\\scripts\\NetHawk.ps1",
+            ".\\scripts\\NetHawk.Custom.ps1",
+            ".\\utils\\NetHawkTester.ps1"
+          )
+          foreach ($file in $files) {
+            $tokens=$null; $errors=$null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) { $errors | ForEach-Object { Write-Host $_ }; exit 1 }
+          }
+      - name: Sync pinned resources
+        shell: powershell
+        run: .\\scripts\\NetHawk.ps1 -Action Sync
+      - name: Self-test
+        shell: powershell
+        run: .\\scripts\\NetHawk.ps1 -Action SelfTest
+
+  release:
+    if: contains(github.event.head_commit.message, '[release]')
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version
+        id: version
+        shell: bash
+        run: echo "version=$(tr -d '\r\n' < .release/version.txt)" >> "$GITHUB_OUTPUT"
+      - name: Sync pinned resources
+        shell: pwsh
+        run: ./scripts/NetHawk.ps1 -Action Sync
+      - name: Build ZIP
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ROOT="NetHawk-$VERSION"
+          ZIP="NetHawk-$VERSION.zip"
+          mkdir -p dist "$ROOT"
+          rsync -a ./ "$ROOT/" \
+            --exclude '.git/' --exclude '.github/' --exclude '.release/' \
+            --exclude 'dist/' --exclude 'logs/' \
+            --exclude 'config/settings.json' --exclude 'config/ports-user.json' \
+            --exclude 'config/profiles-user/'
+          find "$ROOT" -name .gitkeep -delete
+          zip -qr "dist/$ZIP" "$ROOT"
+          rm -rf "$ROOT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NetHawk-${{ steps.version.outputs.version }}
+          path: dist/NetHawk-${{ steps.version.outputs.version }}.zip
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="v$VERSION"
+          ZIP="dist/NetHawk-$VERSION.zip"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+          else
+            gh release create "$TAG" "$ZIP" --title "NetHawk $VERSION" --notes-file .release/notes.md --prerelease
+          fi

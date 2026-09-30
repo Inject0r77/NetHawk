@@ -1,0 +1,58 @@
+name: NetHawk Windows smoke test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate PowerShell syntax
+        shell: powershell
+        run: |
+          $files = @(
+            ".\\scripts\\NetHawk.ps1",
+            ".\\scripts\\NetHawk.Custom.ps1",
+            ".\\utils\\NetHawkTester.ps1"
+          )
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              foreach ($err in $errors) {
+                Write-Host ("{0}:{1}:{2} {3}" -f $file,$err.Extent.StartLineNumber,$err.Extent.StartColumnNumber,$err.Message)
+              }
+              exit 1
+            }
+          }
+
+      - name: Sync pinned resources
+        shell: powershell
+        run: .\\scripts\\NetHawk.ps1 -Action Sync
+
+      - name: Validate BAT launchers
+        shell: powershell
+        run: |
+          $files = @(Get-ChildItem -Path . -Filter *.bat -File) + @(Get-ChildItem -Path .\\tools -Filter *.bat -File)
+          foreach ($file in $files) {
+            $bytes=[IO.File]::ReadAllBytes($file.FullName)
+            if ($bytes | Where-Object { $_ -gt 127 }) { throw "$($file.FullName): BAT is not ASCII" }
+            $text=[Text.Encoding]::ASCII.GetString($bytes)
+            if ($text -match '(?<!`r)`n') { throw "$($file.FullName): BAT contains LF without CRLF" }
+          }
+
+      - name: Run status through cmd.exe
+        shell: cmd
+        env:
+          CI: 1
+        run: status.bat
+
+      - name: Self-test all profiles
+        shell: powershell
+        run: .\\scripts\\NetHawk.ps1 -Action SelfTest

@@ -1,0 +1,15 @@
+bin/*.exe
+bin/*.dll
+bin/*.sys
+bin/*.bin
+*.log
+profiles/*.profile
+config/settings.json
+logs/
+lists/ipset-none.txt
+lists/ipset-any.txt
+lists/ipset-all.txt
+lists/ipset-all.txt.backup
+config/ports-user.json
+config/profiles-user/
+dist/
