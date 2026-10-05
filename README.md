@@ -54,15 +54,6 @@
 >
 > NetHawk не является официальной сборкой Flowseal или bol-van.
 
-## Происхождение проекта
-
-```text
-NetHawk
-└── основан на Flowseal/zapret-discord-youtube
-    └── построен вокруг bol-van/zapret + zapret-win-bundle
-        └── фильтрация пакетов в Windows через WinDivert
-```
-
 ### Upstream-проекты
 
 - [**Flowseal/zapret-discord-youtube**](https://github.com/Flowseal/zapret-discord-youtube) — стратегии, списки, fake-payload'ы и часть Windows-логики, адаптированной в NetHawk.
